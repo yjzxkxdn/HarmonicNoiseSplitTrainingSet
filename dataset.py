@@ -13,7 +13,6 @@ class GeneratedHarmonicNoiseSplitTrainingSet(torch.utils.data.Dataset):
             copy_rate,
             mixup_rate, 
             mixup_alpha,
-            dataset_size=100000,  # 数据集大小
             mode='noise_as_inst'  # 'noise_as_inst'或'harmonic_as_inst'
         ):
         self.harmonic_generator = harmonic_generator
@@ -24,14 +23,13 @@ class GeneratedHarmonicNoiseSplitTrainingSet(torch.utils.data.Dataset):
         self.copy_rate = copy_rate
         self.mixup_rate = mixup_rate
         self.mixup_alpha = mixup_alpha
-        self.dataset_size = dataset_size
         self.mode = mode
         
         # 计算波形时长（秒）
         self.waveform_sec = (cropsize - 1) * hop_length / sr
-
+        
     def __len__(self):
-        return self.dataset_size
+        return 1000
 
     def generate_pair(self):
         """生成一对谐波和噪声信号"""
@@ -40,8 +38,12 @@ class GeneratedHarmonicNoiseSplitTrainingSet(torch.utils.data.Dataset):
         )
         
         noise = self.noise_generator.generate_noise(
-            duration=self.waveform_sec
+            n_samples=int(self.waveform_sec * self.sr)
         )
+        
+        min_len = min(len(harmonic), len(noise))
+        harmonic = harmonic[:min_len]
+        noise = noise[:min_len]
         
         harmonic = np.asarray([harmonic], dtype=np.float32)
         noise = np.asarray([noise], dtype=np.float32)
@@ -71,7 +73,7 @@ class GeneratedHarmonicNoiseSplitTrainingSet(torch.utils.data.Dataset):
 
         return X, y
 
-    def __getitem__(self, skip_mix=False):
+    def __getitem__(self, idx, skip_mix=False):
         # 生成一对信号
         harmonic, noise = self.generate_pair()
         
@@ -140,6 +142,10 @@ class GeneratedHarmonicNoiseSplitValidationSet(torch.utils.data.Dataset):
         noise = self.noise_generator.generate_noise(
             n_samples=int(self.waveform_sec * self.sr)
         )
+        
+        min_len = min(len(harmonic), len(noise))
+        harmonic = harmonic[:min_len]
+        noise = noise[:min_len]
         
         harmonic = np.asarray([harmonic], dtype=np.float32)
         noise = np.asarray([noise], dtype=np.float32)

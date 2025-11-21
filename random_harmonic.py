@@ -90,7 +90,7 @@ class GeneratorHarmonic:
                  sin_amp_max=2,
                  sin_amp_min=0,
                  sin_period_max=0.5,
-                 sin_period_min=0.1,
+                 sin_period_min=0.15,
                  gaussian_smooth_sigma=2.0,
                  # f0步长参数
                  step_hop=4096,
